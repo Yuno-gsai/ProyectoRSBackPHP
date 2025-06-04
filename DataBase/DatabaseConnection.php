@@ -1,16 +1,15 @@
 <?php
 class DatabaseConnection {
     private $conn;
-    public function __construct() {
-        $envPath    = __DIR__ . '/../.env';
-        $env        = parse_ini_file($envPath);
 
-        $host       = $env['DB_HOST'] ?? 'mysql-server-uno.mysql.database.azure.com';
-        $port       = $env['DB_PORT'] ?? 3306;
-        $username   = $env['DB_USERNAME'] ?? 'adminmysql';
-        $password   = $env['DB_PASSWORD'] ?? '';
-        $database   = $env['DB_DATABASE'] ?? 'red_social';
-        $sslCaPath  = $env['DB_SSL_CA_PATH'] ?? 'uploads/certificado.pem';
+    public function __construct() {
+        // Obtener las variables de entorno configuradas en Azure
+        $host       = getenv('DB_HOST') ?? 'mysql-server-uno.mysql.database.azure.com';
+        $port       = getenv('DB_PORT') ?? 3306;
+        $username   = getenv('DB_USERNAME') ?? 'adminmysql';
+        $password   = getenv('DB_PASSWORD') ?? '';
+        $database   = getenv('DB_DATABASE') ?? 'red_social';
+        $sslCaPath  = getenv('DB_SSL_CA_PATH') ?? 'uploads/certificado.pem'; // Asegúrate de que la ruta sea correcta
 
         try {
             $options = [
@@ -23,9 +22,10 @@ class DatabaseConnection {
                 $options[PDO::MYSQL_ATTR_SSL_CA] = $sslCaPath;
             }
 
+            // Definir el DSN (Data Source Name) para la conexión con la base de datos
             $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
 
-            // Inicialmente conectamos sin la DB para chequear si existe
+            // Inicializamos la conexión sin especificar la base de datos para verificar si existe
             $this->conn = new PDO($dsn, $username, $password, $options);
 
             // Verificar si la base de datos existe
@@ -33,6 +33,7 @@ class DatabaseConnection {
             $stmt->execute([$database]);
             $exists = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            // Si la base de datos no existe, la creamos
             if (!$exists) {
                 $this->createDatabaseAndTables($database);
             }
@@ -51,7 +52,7 @@ class DatabaseConnection {
             $this->conn->exec("CREATE DATABASE IF NOT EXISTS `$database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             $this->conn->exec("USE `$database`");
 
-            // Ejecutar el SQL para tablas
+            // Ejecutar el SQL para crear las tablas (asegúrate de tener el archivo DataBase.sql en la ruta correcta)
             $sql = file_get_contents(__DIR__ . '/DataBase.sql');
             $this->conn->exec($sql);
         } catch(PDOException $e) {

@@ -12,13 +12,9 @@ class UserModel extends BaseModel {
         $this->table = 'usuarios';
 
         // Carga variables Azure Storage desde .env
-        $envPath = __DIR__ . '/../.env';
-        if (file_exists($envPath)) {
-            $env = parse_ini_file($envPath);
-            $this->storageAccount = $env['AZURE_STORAGE_ACCOUNT'] ?? 'storagefotosredsocial';
-            $this->containerName = $env['AZURE_STORAGE_CONTAINER'] ?? '';
-            $this->sasToken = $env['AZURE_STORAGE_SAS_TOKEN'] ?? '';
-        }
+        $this->storageAccount = getenv('AZURE_STORAGE_ACCOUNT') ?? '';
+        $this->containerName = getenv('AZURE_STORAGE_CONTAINER') ?? '';
+        $this->sasToken = getenv('AZURE_STORAGE_SAS_TOKEN') ?? '';
     }
 
     public function create(array $data): bool {
