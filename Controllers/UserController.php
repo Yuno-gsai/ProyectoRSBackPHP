@@ -10,79 +10,77 @@ class UserController extends BaseController {
     }
     
     public function handleRequest() {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $uri = trim($uri, '/');
-        $segments = explode('/', $uri);
-        $path = $segments[2] ?? '';
-    
-        // Configurar encabezados CORS
-        header('Access-Control-Allow-Credentials: true');
-    
-        // Manejar solicitudes OPTIONS (preflight)
-        if ($method === 'OPTIONS') {
-            http_response_code(200);
-            exit();
-        }
-    
-        try {
-            switch ($method) {
-                case 'POST':
-                    if ($path === 'login') {
-                        $this->model->login();
-                        return;
-                    }
-                    if ($path === 'create') {
-                        // opcional, si quieres manejar create aquí, sino delegar a BaseController
-                        parent::handleRequest();
-                        return;
-                    }
-                    break;
-    
-                case 'PUT':
-                    if ($path === 'update' && isset($_GET['id'])) {
-                        $id = intval($_GET['id']);
-                        $json = file_get_contents('php://input');
-                        $data = json_decode($json, true);
-    
-                        if (json_last_error() !== JSON_ERROR_NONE) {
-                            throw new Exception('Formato JSON inválido: ' . json_last_error_msg());
-                        }
-    
-                        if (empty($data)) {
-                            throw new Exception('No se recibieron datos para actualizar');
-                        }
-    
-                        if ($this->model->update($id, $data)) {
-                            http_response_code(200);
-                            echo json_encode([
-                                'success' => true,
-                                'message' => 'Usuario actualizado correctamente',
-                                'data' => $data
-                            ]);
-                        } else {
-                            throw new Exception('No se pudo actualizar el usuario');
-                        }
-                        return; // Importante: salir después de manejar la solicitud
-                    }
-                    break;
-    
-                default:
-                    // Dejar que el controlador base maneje otros métodos
-                    parent::handleRequest();
-                    return;
-            }
-    
-            // Si llegamos aquí, la ruta no fue manejada
-            throw new Exception('Ruta no válida');
-        } catch (Exception $e) {
+        // Obtener los datos del cuerpo de la solicitud (en formato JSON)
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        // Verificar si los parámetros 'controller' y 'method' están presentes en el cuerpo de la solicitud
+        $controller = $input['controller'] ?? null;
+        $method = $input['method'] ?? null;
+
+        // Asegurarse de que los parámetros 'controller' y 'method' estén presentes
+        if (!$controller || !$method) {
             http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            echo json_encode(['error' => 'Controlador o método no especificado en el cuerpo']);
+            return;
+        }
+
+        // Procesar la solicitud según el método HTTP y el controlador
+        switch ($method) {
+            case 'POST':
+                if ($controller === 'User' && $method === 'create') {
+                    $data = $input['data'] ?? null; // Los datos para crear están bajo la clave 'data'
+                    if ($data && $this->model->create($data)) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Error al crear']);
+                    }
+                }
+                break;
+
+            case 'PUT':
+                if ($controller === 'User' && $method === 'update' && isset($input['id'])) {
+                    $id = intval($input['id']);
+                    $data = $input['data'] ?? null;
+                    if ($this->model->update($id, $data)) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Error al actualizar']);
+                    }
+                }
+                break;
+
+            case 'DELETE':
+                if ($controller === 'User' && $method === 'delete' && isset($input['id'])) {
+                    $id = intval($input['id']);
+                    if ($this->model->delete($id)) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Error al eliminar']);
+                    }
+                }
+                break;
+
+            case 'GET':
+                if ($controller === 'User' && $method === 'all') {
+                    $data = $this->model->getAll();
+                    echo json_encode($data);
+                }
+                break;
+
+            case 'POST':
+                if ($controller === 'User' && $method === 'login') {
+                    $this->model->login();
+                }
+                break;
+
+            default:
+                http_response_code(404);
+                echo json_encode(['error' => 'Método no válido']);
+                break;
         }
     }
-    
 }
+?>
