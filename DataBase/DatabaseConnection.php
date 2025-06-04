@@ -2,15 +2,15 @@
 class DatabaseConnection {
     private $conn;
     public function __construct() {
-        //$envPath    = __DIR__ . '/../.env';
-        //$env        = parse_ini_file($envPath);
+        $envPath    = __DIR__ . '/../.env';
+        $env        = parse_ini_file($envPath);
 
-        $host       = 'mysql-server-uno.mysql.database.azure.com';
-        $port       = 3306;
-        $username   = 'adminmysql';
-        $password   = 'Coc864020';
-        $database   = 'red_social';
-        $sslCaPath  = 'C:/Users/User/Downloads/DigiCertGlobalRootCA.crt.pem';
+        $host       = $env['DB_HOST'] ?? 'mysql-server-uno.mysql.database.azure.com';
+        $port       = $env['DB_PORT'] ?? 3306;
+        $username   = $env['DB_USERNAME'] ?? 'adminmysql';
+        $password   = $env['DB_PASSWORD'] ?? 'Coc864020';
+        $database   = $env['DB_DATABASE'] ?? 'red_social';
+        $sslCaPath  = $env['DB_SSL_CA_PATH'] ?? 'C:/Users/User/Downloads/DigiCertGlobalRootCA.crt.pem';
 
         try {
             $options = [

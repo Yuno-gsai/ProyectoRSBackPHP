@@ -12,9 +12,13 @@ class PublicacionesModel extends BaseModel {
         $this->table = 'publicaciones';
 
         // Cargar variables de entorno
-        $this->storageAccount = 'storagefotosredsocial';
-        $this->containerName = 'publicaciones';
-        $this->sasToken = 'sp=racwd&st=2025-06-04T02:40:06Z&se=2025-07-12T10:40:06Z&spr=https&sv=2024-11-04&sr=c&sig=DCCSrxkJEkv2uVT1es8AFVPlBkH7ouUjAS1DSPyJ9hI%3D';
+        $envPath = __DIR__ . '/../.env';
+        if (file_exists($envPath)) {
+            $env = parse_ini_file($envPath);
+            $this->storageAccount = $env['AZURE_STORAGE_ACCOUNT'] ?? '';
+            $this->containerName = $env['AZURE_STORAGE_CONTAINER'] ?? '';
+            $this->sasToken = $env['AZURE_STORAGE_SAS_TOKEN'] ?? '';
+        }
     }
 
     public function create(array $data): bool {
