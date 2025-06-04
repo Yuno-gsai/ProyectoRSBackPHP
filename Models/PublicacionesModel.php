@@ -1,51 +1,96 @@
 <?php
-require_once  "BaseModel.php";
+require_once "BaseModel.php";
 
-class PublicacionesModel extends BaseModel{
+class PublicacionesModel extends BaseModel {
 
-    public function __construct(){
-        parent:: __construct();
+    private $storageAccount;
+    private $containerName;
+    private $sasToken;
+
+    public function __construct() {
+        parent::__construct();
         $this->table = 'publicaciones';
+
+        // Cargar variables de entorno
+        $envPath = __DIR__ . '/../.env';
+        if (file_exists($envPath)) {
+            $env = parse_ini_file($envPath);
+            $this->storageAccount = $env['AZURE_STORAGE_ACCOUNT'] ?? '';
+            $this->containerName = $env['AZURE_STORAGE_CONTAINER'] ?? '';
+            $this->sasToken = $env['AZURE_STORAGE_SAS_TOKEN'] ?? '';
+        }
     }
 
     public function create(array $data): bool {
-        // Si imagen viene en base64, la convertimos a archivo y guardamos ruta
         if (isset($data['imagen']) && str_starts_with($data['imagen'], 'data:image/')) {
             $data['imagen'] = $this->guardarImagenBase64($data['imagen']);
         }
-    
+
         $query = "INSERT INTO {$this->table} (usuario_id, contenido, imagen) VALUES (:usuario_id, :contenido, :imagen)";
         $stmt = $this->getConnection()->prepare($query);
-    
+
         return $stmt->execute([
             'usuario_id' => $data['usuario_id'],
             'contenido'  => $data['contenido'],
             'imagen'     => $data['imagen'] ?? null
         ]);
     }
-    
-    // Función privada para guardar imagen base64 en archivo
+
     private function guardarImagenBase64(string $base64): string {
-        $uploadDir = __DIR__ . '/../uploads/publicaciones/';  // carpeta específica para publicaciones
-    
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-    
+        // Extraer extensión y decodificar base64
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
-        $ext = $type[1]; // extensión como jpg, png
+        $ext = $type[1]; // jpg, png, etc.
         $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $base64 = str_replace(' ', '+', $base64);
         $data = base64_decode($base64);
-    
-        $fileName = uniqid('pub_') . '.' . $ext;
-        $filePath = $uploadDir . $fileName;
-    
-        file_put_contents($filePath, $data);
-    
-        return 'uploads/publicaciones/' . $fileName;
+
+        // Guardar temporalmente el archivo
+        $tempFile = sys_get_temp_dir() . '/' . uniqid('pub_') . '.' . $ext;
+        file_put_contents($tempFile, $data);
+
+        // Generar nombre blob en Azure
+        $blobName = 'publicaciones/' . uniqid() . '.' . $ext;
+
+        // Subir a Azure Blob Storage usando REST y SAS token
+        $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
+
+        // Eliminar archivo temporal
+        unlink($tempFile);
+
+        return $url;
     }
-    
+
+    private function uploadToAzureBlob($storageAccount, $containerName, $blobName, $filePath, $sasToken) {
+        $url = "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}?{$sasToken}";
+
+        $fileSize = filesize($filePath);
+        $fileHandle = fopen($filePath, 'r');
+
+        $headers = [
+            'x-ms-blob-type: BlockBlob',
+            'Content-Length: ' . $fileSize,
+            'x-ms-version: 2020-10-02',
+            'x-ms-date: ' . gmdate('D, d M Y H:i:s T')
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_PUT, true);
+        curl_setopt($ch, CURLOPT_INFILE, $fileHandle);
+        curl_setopt($ch, CURLOPT_INFILESIZE, $fileSize);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        fclose($fileHandle);
+
+        if ($statusCode == 201) {
+            return "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}";
+        } else {
+            throw new Exception("Error subiendo archivo a Azure Blob: HTTP $statusCode");
+        }
+    }
 
     public function update(int $id, array $data): bool {
         $query = "UPDATE {$this->table} SET 
@@ -61,50 +106,45 @@ class PublicacionesModel extends BaseModel{
         ]);
     }
 
+    // Resto de métodos getAll y getPublicacionesDeAmigos se mantienen igual...
     public function getAll() {
         $pdo = $this->getConnection();
-    
-        // Obtener publicaciones
+
         $stmt = $pdo->query("SELECT * FROM publicaciones");
         $publicaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Obtener likes con datos de usuario
+
         $likesStmt = $pdo->query("
             SELECT l.*, u.nombre_usuario, u.foto_perfil 
             FROM likes l
             JOIN usuarios u ON l.usuario_id = u.id
         ");
         $likes = $likesStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Obtener comentarios con datos de usuario
+
         $comentariosStmt = $pdo->query("
             SELECT c.*, u.nombre_usuario, u.foto_perfil 
             FROM comentarios c
             JOIN usuarios u ON c.usuario_id = u.id
         ");
         $comentarios = $comentariosStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Combinar todo por publicación
+
         foreach ($publicaciones as &$pub) {
             $pub['likes'] = array_values(array_filter($likes, function ($like) use ($pub) {
                 return $like['publicacion_id'] == $pub['id'];
             }));
             $pub['totalLikes'] = count($pub['likes']);
-    
+
             $pub['comentarios'] = array_values(array_filter($comentarios, function ($comentario) use ($pub) {
                 return $comentario['publicacion_id'] == $pub['id'];
             }));
             $pub['totalComentarios'] = count($pub['comentarios']);
         }
 
-    
         return $publicaciones;
     }
 
     public function getPublicacionesDeAmigos($usuarioId) {
         $pdo = $this->getConnection();
-    
-        // Obtener publicaciones de amigos
+
         $sql = "
             SELECT p.*, u.nombre_usuario, u.foto_perfil
             FROM publicaciones p
@@ -120,21 +160,18 @@ class PublicacionesModel extends BaseModel{
             )
             ORDER BY p.creado_en DESC
         ";
-    
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['usuarioId' => $usuarioId]);
         $publicaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Obtener likes para estas publicaciones
+
         $publicacionIds = array_column($publicaciones, 'id');
         if (empty($publicacionIds)) {
-            return []; // No hay publicaciones de amigos
+            return [];
         }
-    
-        // Preparar placeholders para IN
+
         $placeholders = implode(',', array_fill(0, count($publicacionIds), '?'));
-    
-        // Likes con usuario
+
         $likesSql = "
             SELECT l.*, u.nombre_usuario, u.foto_perfil
             FROM likes l
@@ -144,8 +181,7 @@ class PublicacionesModel extends BaseModel{
         $likesStmt = $pdo->prepare($likesSql);
         $likesStmt->execute($publicacionIds);
         $likes = $likesStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Comentarios con usuario
+
         $comentariosSql = "
             SELECT c.*, u.nombre_usuario, u.foto_perfil
             FROM comentarios c
@@ -155,20 +191,17 @@ class PublicacionesModel extends BaseModel{
         $comentariosStmt = $pdo->prepare($comentariosSql);
         $comentariosStmt->execute($publicacionIds);
         $comentarios = $comentariosStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Asociar likes y comentarios a cada publicación
+
         foreach ($publicaciones as &$pub) {
             $pub['likes'] = array_values(array_filter($likes, fn($like) => $like['publicacion_id'] == $pub['id']));
             $pub['totalLikes'] = count($pub['likes']);
-    
+
             $pub['comentarios'] = array_values(array_filter($comentarios, fn($comentario) => $comentario['publicacion_id'] == $pub['id']));
             $pub['totalComentarios'] = count($pub['comentarios']);
         }
-    
+
         return $publicaciones;
     }
-    
-    
-    
+
 }
 ?>

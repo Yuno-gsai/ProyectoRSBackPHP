@@ -3,9 +3,22 @@ require_once 'BaseModel.php';
 
 class UserModel extends BaseModel {
 
+    private $storageAccount;
+    private $containerName;
+    private $sasToken;
+
     public function __construct() {
         parent::__construct();
         $this->table = 'usuarios';
+
+        // Carga variables Azure Storage desde .env
+        $envPath = __DIR__ . '/../.env';
+        if (file_exists($envPath)) {
+            $env = parse_ini_file($envPath);
+            $this->storageAccount = $env['AZURE_STORAGE_ACCOUNT'] ?? '';
+            $this->containerName = $env['AZURE_STORAGE_CONTAINER'] ?? '';
+            $this->sasToken = $env['AZURE_STORAGE_SAS_TOKEN'] ?? '';
+        }
     }
 
     public function create(array $data): bool {
@@ -22,12 +35,11 @@ class UserModel extends BaseModel {
     public function update(int $id, array $data) {
         $data['id'] = $id;
     
-        // Hashear contraseña si viene en el array de datos
         if (isset($data['contrasena'])) {
             $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
         }
     
-        // Si foto_perfil viene como base64, la convertimos en archivo
+        // Si foto_perfil viene base64, subir a Azure Blob y obtener URL
         if (isset($data['foto_perfil']) && str_starts_with($data['foto_perfil'], 'data:image/')) {
             $data['foto_perfil'] = $this->guardarImagenBase64($data['foto_perfil']);
         }
@@ -58,25 +70,63 @@ class UserModel extends BaseModel {
     
 
     private function guardarImagenBase64(string $base64): string {
-        $uploadDir = __DIR__ . '/../uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
+        // Procesar base64 para obtener binario y extensión
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
         $ext = $type[1]; // jpg, png, etc.
         $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $base64 = str_replace(' ', '+', $base64);
         $data = base64_decode($base64);
 
-        $fileName = uniqid('img_') . '.' . $ext;
-        $filePath = $uploadDir . $fileName;
+        // Guardar temporalmente
+        $tempFile = sys_get_temp_dir() . '/' . uniqid('img_') . '.' . $ext;
+        file_put_contents($tempFile, $data);
 
-        file_put_contents($filePath, $data);
+        // Nombre blob en Azure
+        $blobName = 'usuarios/' . uniqid() . '.' . $ext;
 
-        return 'uploads/' . $fileName;
+        // Subir a Azure Blob Storage usando REST con SAS Token
+        $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
+
+        // Eliminar temporal
+        unlink($tempFile);
+
+        return $url;
     }
 
+    private function uploadToAzureBlob($storageAccount, $containerName, $blobName, $filePath, $sasToken) {
+        $url = "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}?{$sasToken}";
+
+        $fileSize = filesize($filePath);
+        $fileHandle = fopen($filePath, 'r');
+
+        $headers = [
+            'x-ms-blob-type: BlockBlob',
+            'Content-Length: ' . $fileSize,
+            'x-ms-version: 2020-10-02',
+            'x-ms-date: ' . gmdate('D, d M Y H:i:s T')
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_PUT, true);
+        curl_setopt($ch, CURLOPT_INFILE, $fileHandle);
+        curl_setopt($ch, CURLOPT_INFILESIZE, $fileSize);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        fclose($fileHandle);
+
+        if ($statusCode == 201) {
+            return "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}";
+        } else {
+            throw new Exception("Error subiendo archivo a Azure Blob: HTTP $statusCode");
+        }
+    }
+
+    // Resto de funciones (getByEmail, login, etc.) igual que antes...
+    
     public function getByEmail(string $email) {
         $query = "SELECT * FROM {$this->table} WHERE correo = :correo LIMIT 1";
         $stmt = $this->getConnection()->prepare($query);
@@ -84,9 +134,7 @@ class UserModel extends BaseModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-
     public function login() {
-        // Espera POST con JSON { correo, contrasena }
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
     
@@ -119,7 +167,6 @@ class UserModel extends BaseModel {
         }
     
         if (password_verify($data['contrasena'], $user['contrasena'])) {
-            // No enviar contraseña en la respuesta
             unset($user['contrasena']);
             echo json_encode([
                 'success' => true,
@@ -133,5 +180,4 @@ class UserModel extends BaseModel {
             ]);
         }
     }
-    
 }
