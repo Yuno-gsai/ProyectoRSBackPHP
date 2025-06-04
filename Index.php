@@ -34,16 +34,4 @@ if ($controller && $method) {
 }
 ?>
 
-//Para Probar el postman Usar las siguientes URL
-
-//http://localhost/ProyectoDeDaw/Aqui El Nombre De La Ruta/all 
-
-//Rutas: Friends,Coments,Likes,Publications,User
-
-//http://localhost/ProyectoDeDaw/Friends/all Consultar  todos los registros de la base de datos
-//http://localhost/ProyectoDeDaw/Friends/create Crear un nuevo registro en la base de datos
-//http://localhost/ProyectoDeDaw/Friends/delete?id=1 Eliminar un registro de la base de datos
-//http://localhost/ProyectoDeDaw/Friends/update?id=1 Actualizar un registro de la base de datos
-
-?>
 
