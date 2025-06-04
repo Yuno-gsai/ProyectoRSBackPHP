@@ -8,9 +8,9 @@ class DatabaseConnection {
         $host       = $env['DB_HOST'] ?? 'mysql-server-uno.mysql.database.azure.com';
         $port       = $env['DB_PORT'] ?? 3306;
         $username   = $env['DB_USERNAME'] ?? 'adminmysql';
-        $password   = $env['DB_PASSWORD'] ?? 'Coc864020';
+        $password   = $env['DB_PASSWORD'] ?? '';
         $database   = $env['DB_DATABASE'] ?? 'red_social';
-        $sslCaPath  = $env['DB_SSL_CA_PATH'] ?? 'C:/Users/User/Downloads/DigiCertGlobalRootCA.crt.pem';
+        $sslCaPath  = $env['DB_SSL_CA_PATH'] ?? 'uploads/certificado.pem';
 
         try {
             $options = [
