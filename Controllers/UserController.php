@@ -24,10 +24,17 @@ class UserController extends BaseController {
             return;
         }
 
-        // Procesar la solicitud según el método HTTP y el controlador
-        switch ($method) {
+        // Validar que el controller sea correcto
+        if ($controller !== 'User') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Controlador no válido']);
+            return;
+        }
+
+        // Procesar la solicitud según el método especificado
+        switch ($_SERVER['REQUEST_METHOD']) {
             case 'POST':
-                if ($controller === 'User' && $method === 'create') {
+                if ($method === 'create') {
                     $data = $input['data'] ?? null; // Los datos para crear están bajo la clave 'data'
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
@@ -36,10 +43,13 @@ class UserController extends BaseController {
                         echo json_encode(['error' => 'Error al crear']);
                     }
                 }
+                if ($method === 'login') {
+                    $this->model->login();  // Manejar el login
+                }
                 break;
 
             case 'PUT':
-                if ($controller === 'User' && $method === 'update' && isset($input['id'])) {
+                if ($method === 'update' && isset($input['id'])) {
                     $id = intval($input['id']);
                     $data = $input['data'] ?? null;
                     if ($this->model->update($id, $data)) {
@@ -52,7 +62,7 @@ class UserController extends BaseController {
                 break;
 
             case 'DELETE':
-                if ($controller === 'User' && $method === 'delete' && isset($input['id'])) {
+                if ($method === 'delete' && isset($input['id'])) {
                     $id = intval($input['id']);
                     if ($this->model->delete($id)) {
                         echo json_encode(['success' => true]);
@@ -64,15 +74,9 @@ class UserController extends BaseController {
                 break;
 
             case 'GET':
-                if ($controller === 'User' && $method === 'all') {
+                if ($method === 'all') {
                     $data = $this->model->getAll();
                     echo json_encode($data);
-                }
-                break;
-
-            case 'POST':
-                if ($controller === 'User' && $method === 'login') {
-                    $this->model->login();
                 }
                 break;
 
