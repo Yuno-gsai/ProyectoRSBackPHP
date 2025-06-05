@@ -2,31 +2,23 @@
 abstract class BaseController {
     
     protected $model;
-    
-    public function __construct() {
-        // Constructor vacío
-    }
 
     public function handleRequest() {
-        // Obtener los datos del cuerpo de la solicitud
         $input = json_decode(file_get_contents('php://input'), true);
 
-        // Verificar si los parámetros 'controller' y 'method' están en el cuerpo de la solicitud
         $controller = $input['controller'] ?? null;
         $method = $input['method'] ?? null;
 
-        // Asegurarse de que los parámetros 'controller' y 'method' estén presentes
         if (!$controller || !$method) {
             http_response_code(400);
             echo json_encode(['error' => 'Controlador o método no especificado en el cuerpo']);
             return;
         }
 
-        // Procesar la solicitud según el método HTTP y el controlador
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'POST':
                 if ($method === 'create') {
-                    $data = $input['data'] ?? null; // Asumimos que los datos para crear están bajo la clave 'data'
+                    $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
                     } else {

@@ -11,7 +11,6 @@ class PublicacionesModel extends BaseModel {
         parent::__construct();
         $this->table = 'publicaciones';
 
-        // Cargar variables de entorno
         $envPath = __DIR__ . '/../.env';
         if (file_exists($envPath)) {
             $env = parse_ini_file($envPath);
@@ -37,24 +36,19 @@ class PublicacionesModel extends BaseModel {
     }
 
     private function guardarImagenBase64(string $base64): string {
-        // Extraer extensión y decodificar base64
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
-        $ext = $type[1]; // jpg, png, etc.
+        $ext = $type[1];
         $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $base64 = str_replace(' ', '+', $base64);
         $data = base64_decode($base64);
 
-        // Guardar temporalmente el archivo
         $tempFile = sys_get_temp_dir() . '/' . uniqid('pub_') . '.' . $ext;
         file_put_contents($tempFile, $data);
 
-        // Generar nombre blob en Azure
         $blobName = 'publicaciones/' . uniqid() . '.' . $ext;
 
-        // Subir a Azure Blob Storage usando REST y SAS token
         $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
 
-        // Eliminar archivo temporal
         unlink($tempFile);
 
         return $url;
@@ -106,7 +100,6 @@ class PublicacionesModel extends BaseModel {
         ]);
     }
 
-    // Resto de métodos getAll y getPublicacionesDeAmigos se mantienen igual...
     public function getAll() {
         $pdo = $this->getConnection();
 

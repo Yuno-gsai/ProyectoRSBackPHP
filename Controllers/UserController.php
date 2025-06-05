@@ -10,32 +10,27 @@ class UserController extends BaseController {
     }
     
     public function handleRequest() {
-        // Obtener los datos del cuerpo de la solicitud (en formato JSON)
         $input = json_decode(file_get_contents('php://input'), true);
 
-        // Verificar si los parámetros 'controller' y 'method' están presentes en el cuerpo de la solicitud
         $controller = $input['controller'] ?? null;
         $method = $input['method'] ?? null;
 
-        // Asegurarse de que los parámetros 'controller' y 'method' estén presentes
         if (!$controller || !$method) {
             http_response_code(400);
             echo json_encode(['error' => 'Controlador o método no especificado en el cuerpo']);
             return;
         }
 
-        // Validar que el controller sea correcto
         if ($controller !== 'User') {
             http_response_code(400);
             echo json_encode(['error' => 'Controlador no válido']);
             return;
         }
 
-        // Procesar la solicitud según el método especificado
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'POST':
                 if ($method === 'create') {
-                    $data = $input['data'] ?? null; // Los datos para crear están bajo la clave 'data'
+                    $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
                     } else {
@@ -44,7 +39,7 @@ class UserController extends BaseController {
                     }
                 }
                 if ($method === 'login') {
-                    $this->model->login();  // Manejar el login
+                    $this->model->login();  
                 }
                 break;
 

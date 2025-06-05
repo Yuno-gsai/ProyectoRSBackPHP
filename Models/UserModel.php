@@ -35,7 +35,6 @@ class UserModel extends BaseModel {
             $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
         }
     
-        // Si foto_perfil viene base64, subir a Azure Blob y obtener URL
         if (isset($data['foto_perfil']) && str_starts_with($data['foto_perfil'], 'data:image/')) {
             $data['foto_perfil'] = $this->guardarImagenBase64($data['foto_perfil']);
         }
@@ -66,24 +65,19 @@ class UserModel extends BaseModel {
     
 
     private function guardarImagenBase64(string $base64): string {
-        // Procesar base64 para obtener binario y extensión
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
-        $ext = $type[1]; // jpg, png, etc.
+        $ext = $type[1]; 
         $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $base64 = str_replace(' ', '+', $base64);
         $data = base64_decode($base64);
 
-        // Guardar temporalmente
         $tempFile = sys_get_temp_dir() . '/' . uniqid('img_') . '.' . $ext;
         file_put_contents($tempFile, $data);
 
-        // Nombre blob en Azure
         $blobName = 'usuarios/' . uniqid() . '.' . $ext;
 
-        // Subir a Azure Blob Storage usando REST con SAS Token
         $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
 
-        // Eliminar temporal
         unlink($tempFile);
 
         return $url;
@@ -121,7 +115,6 @@ class UserModel extends BaseModel {
         }
     }
 
-    // Resto de funciones (getByEmail, login, etc.) igual que antes...
     
     public function getByEmail(string $email) {
         $query = "SELECT * FROM {$this->table} WHERE correo = :correo LIMIT 1";
