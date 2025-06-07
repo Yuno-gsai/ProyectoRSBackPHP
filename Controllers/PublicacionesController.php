@@ -48,6 +48,17 @@ class PublicacionesController extends BaseController {
                         echo json_encode(['error' => 'Error al crear']);
                     }
                 }
+                if ($method === 'all') {
+                    $data = $this->model->getAll();
+                    echo json_encode($data);
+                }
+
+                if ($method === 'amigos' && isset($input['data'])) {
+                    $data = $input['data'] ?? null;
+                    $usuarioId = $data['usuario_id']; 
+                    $data = $this->model->getPublicacionesDeAmigos($usuarioId);
+                    echo json_encode($data);
+                }
                 break;
 
             case 'PUT':
@@ -72,20 +83,6 @@ class PublicacionesController extends BaseController {
                         http_response_code(400);
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
-                }
-                break;
-
-            case 'GET':
-                if ($method === 'all') {
-                    $data = $this->model->getAll();
-                    echo json_encode($data);
-                }
-
-                if ($method === 'amigos' && isset($input['data'])) {
-                    $data = $input['data'] ?? null;
-                    $usuarioId = $data['usuario_id']; 
-                    $data = $this->model->getPublicacionesDeAmigos($usuarioId);
-                    echo json_encode($data);
                 }
                 break;
 
