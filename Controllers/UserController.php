@@ -49,7 +49,7 @@ class UserController extends BaseController {
                     }
                 }
                 if ($method === 'login') {
-                    $this->model->login();  
+                    $this->model->login($input['data']);  
                 }
                 break;
 
@@ -66,11 +66,6 @@ class UserController extends BaseController {
                 }
                 break;
 
-            case 'POST':
-                if ($method === 'login') {
-                    $this->model->login();  
-                }
-                break;
 
             case 'DELETE':
                 if ($method === 'delete' && isset($input['id'])) {

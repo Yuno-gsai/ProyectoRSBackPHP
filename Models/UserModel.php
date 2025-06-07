@@ -123,9 +123,7 @@ class UserModel extends BaseModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    public function login() {
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
+    public function login($data) {
     
         if (json_last_error() !== JSON_ERROR_NONE) {
             http_response_code(400);
