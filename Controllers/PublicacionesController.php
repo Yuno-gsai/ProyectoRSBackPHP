@@ -81,8 +81,9 @@ class PublicacionesController extends BaseController {
                     echo json_encode($data);
                 }
 
-                if ($method === 'amigos' && isset($input['usuario_id'])) {
-                    $usuarioId = $input['usuario_id']; 
+                if ($method === 'amigos' && isset($input['data'])) {
+                    $data = $input['data'] ?? null;
+                    $usuarioId = $data['usuario_id']; 
                     $data = $this->model->getPublicacionesDeAmigos($usuarioId);
                     echo json_encode($data);
                 }
