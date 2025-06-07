@@ -46,8 +46,8 @@ abstract class BaseController {
                 break;
             case 'PUT':
                 if ($method === 'update' && isset($input['id'])) {
-                    $id = intval($input['id']);
                     $data = $input['data'] ?? null;
+                    $id = intval($input['id']);
                     if ($this->model->update($id, $data)) {
                         echo json_encode(['success' => true]);
                     } else {
@@ -59,8 +59,9 @@ abstract class BaseController {
 
             case 'DELETE':
                 if ($method === 'delete' && isset($input['id'])) {
+                    $data = $input['data'] ?? null;
                     $id = intval($input['id']);
-                    if ($this->model->delete($id)) {
+                    if ($this->model->delete($data)) {
                         echo json_encode(['success' => true]);
                     } else {
                         http_response_code(400);
