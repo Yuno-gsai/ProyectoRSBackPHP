@@ -5,7 +5,6 @@ require_once __DIR__ . '/../Models/UserModel.php';
 class UserController extends BaseController {
     
     public function __construct() {
-        parent::__construct();
         $this->model = new UserModel();
     }
     
