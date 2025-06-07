@@ -45,7 +45,7 @@ abstract class BaseController {
                 }
                 break;
             case 'PUT':
-                if ($method === 'update' && isset($input['id'])) {
+                if ($method === 'update' && isset($input['data'])) {
                     $data = $input['data'] ?? null;
                     $id = intval($data['id']);
                     if ($this->model->update($id, $data)) {
@@ -58,7 +58,7 @@ abstract class BaseController {
                 break;
 
             case 'DELETE':
-                if ($method === 'delete' && isset($input['id'])) {
+                if ($method === 'delete' && isset($input['data'])) {
                     $data = $input['data'] ?? null;
                     $id = intval($data['id']);
                     if ($this->model->delete($id)) {
