@@ -31,7 +31,7 @@ class PublicacionesController extends BaseController {
             return;
         }
 
-        if ($controller !== 'Publicaciones') {
+        if ($controller !== 'Publications') {
             http_response_code(400);
             echo json_encode(['error' => 'Controlador no válido']);
             return;
