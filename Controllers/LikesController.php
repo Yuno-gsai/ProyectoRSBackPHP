@@ -6,5 +6,4 @@ class LikesController extends BaseController{
         $this->model = new LikesModel();    
     }
 }
-
 ?>
