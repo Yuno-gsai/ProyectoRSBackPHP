@@ -5,7 +5,7 @@ abstract class BaseController {
 
     public function handleRequest() {
         // Encabezados CORS para permitir solicitudes desde un origen específico
-        header("Access-Control-Allow-Origin: http://localhost:5173");  // Cambiar a tu dominio de frontend en producción
+        header("Access-Control-Allow-Origin: *");  // Cambiar a tu dominio de frontend en producción
         header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");  // Métodos permitidos
         header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");  // Cabeceras permitidas
         header("Access-Control-Allow-Credentials: true");  // Si es necesario permitir credenciales (cookies, autenticación)
