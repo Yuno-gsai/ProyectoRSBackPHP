@@ -43,6 +43,16 @@ abstract class BaseController {
                     $data = $this->model->getAll();
                     echo json_encode($data);
                 }
+                if ($method === 'delete' && isset($input['data'])) {
+                    $data = $input['data'] ?? null;
+                    $id = intval($data['id']);
+                    if ($this->model->delete($id)) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Error al eliminar']);
+                    }
+                }
                 break;
             case 'PUT':
                 if ($method === 'update' && isset($input['data'])) {
@@ -57,18 +67,6 @@ abstract class BaseController {
                 }
                 break;
 
-            case 'DELETE':
-                if ($method === 'delete' && isset($input['data'])) {
-                    $data = $input['data'] ?? null;
-                    $id = intval($data['id']);
-                    if ($this->model->delete($id)) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        http_response_code(400);
-                        echo json_encode(['error' => 'Error al eliminar']);
-                    }
-                }
-                break;
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);
