@@ -5,11 +5,11 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");  // Mé
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");  // Cabeceras permitidas
 header("Access-Control-Allow-Credentials: true");  // Si es necesario permitir credenciales (cookies, autenticación)
 
+// Si la solicitud es de tipo OPTIONS, responder con 200 para la solicitud preflight
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(200);
-    exit;
+    http_response_code(200);  // Responde con código 200 para la solicitud OPTIONS
+    exit;  // Termina aquí la ejecución, ya que solo estamos respondiendo a la pre-solicitud
 }
-
 // Configuración de errores para desarrollo
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
