@@ -49,7 +49,7 @@ class UserController extends BaseController {
                     }
                 }
                 if ($method === 'login') {
-                    $this->model->login($input['data']);  
+                    $this->model->login($data);  
                 }
                 break;
 
