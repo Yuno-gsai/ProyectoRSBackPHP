@@ -39,8 +39,8 @@ class UserController extends BaseController {
 
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'POST':
+                $data = $input['data'] ?? null; 
                 if ($method === 'create') {
-                    $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
                     } else {
