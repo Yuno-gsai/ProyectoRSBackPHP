@@ -39,8 +39,11 @@ abstract class BaseController {
                         echo json_encode(['error' => 'Error al crear']);
                     }
                 }
+                if ($method === 'all') {
+                    $data = $this->model->getAll();
+                    echo json_encode($data);
+                }
                 break;
-
             case 'PUT':
                 if ($method === 'update' && isset($input['id'])) {
                     $id = intval($input['id']);
@@ -65,14 +68,6 @@ abstract class BaseController {
                     }
                 }
                 break;
-
-            case 'GET':
-                if ($method === 'all') {
-                    $data = $this->model->getAll();
-                    echo json_encode($data);
-                }
-                break;
-
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);

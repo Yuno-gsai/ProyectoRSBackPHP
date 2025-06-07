@@ -53,6 +53,10 @@ class UserController extends BaseController {
                 if ($method === 'login') {
                     $this->model->login($data);  
                 }
+                if ($method === 'all') {
+                    $data = $this->model->getAll();
+                    echo json_encode($data);
+                }
                 break;
 
             case 'PUT':
@@ -79,14 +83,6 @@ class UserController extends BaseController {
                     }
                 }
                 break;
-
-            case 'GET':
-                if ($method === 'all') {
-                    $data = $this->model->getAll();
-                    echo json_encode($data);
-                }
-                break;
-
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);
