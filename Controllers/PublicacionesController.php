@@ -37,9 +37,8 @@ class PublicacionesController extends BaseController {
             return;
         }
 
-        switch ($_SERVER['REQUEST_METHOD']) {
-            case 'POST':
-                if ($method === 'create') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($method === 'create') {
                     $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
@@ -79,10 +78,6 @@ class PublicacionesController extends BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
-            default:
-                http_response_code(404);
-                echo json_encode(['error' => 'Método no válido']);
-                break;
         }
     }
 }

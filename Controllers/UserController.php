@@ -40,42 +40,42 @@ class UserController extends BaseController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                $data = $input['data'] ?? null; 
-                if ($method === 'create') {
-                    if ($data && $this->model->create($data)) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        http_response_code(400);
-                        echo json_encode(['error' => 'Error al crear']);
-                    }
+            $data = $input['data'] ?? null; 
+            if ($method === 'create') {
+                if ($data && $this->model->create($data)) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Error al crear']);
                 }
-                if ($method === 'login') {
-                    $this->model->login($data);  
+            }
+            if ($method === 'login') {
+                $this->model->login($data);  
+            }
+            if ($method === 'all') {
+                $data = $this->model->getAll();
+                echo json_encode($data);
+            }
+            if ($method === 'delete' && isset($input['id'])) {
+                $data = $input['data'] ?? null;
+                $id = intval($input['id']);
+                if ($this->model->delete($data)) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Error al eliminar']);
                 }
-                if ($method === 'all') {
-                    $data = $this->model->getAll();
-                    echo json_encode($data);
+            }
+            if ($method === 'update' && isset($input['id'])) {
+                $data = $input['data'] ?? null;
+                $id = intval($input['id']);
+                if ($this->model->update($id, $data)) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Error al actualizar']);
                 }
-                if ($method === 'delete' && isset($input['id'])) {
-                    $data = $input['data'] ?? null;
-                    $id = intval($input['id']);
-                    if ($this->model->delete($data)) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        http_response_code(400);
-                        echo json_encode(['error' => 'Error al eliminar']);
-                    }
-                }
-                if ($method === 'update' && isset($input['id'])) {
-                    $data = $input['data'] ?? null;
-                    $id = intval($input['id']);
-                    if ($this->model->update($id, $data)) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        http_response_code(400);
-                        echo json_encode(['error' => 'Error al actualizar']);
-                    }
-                }
+            }
         }
     }
 }

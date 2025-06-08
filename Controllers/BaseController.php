@@ -28,8 +28,7 @@ abstract class BaseController {
             return;
         }
 
-        switch ($_SERVER['REQUEST_METHOD']) {
-            case 'POST':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($method === 'create') {
                     $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
@@ -53,7 +52,6 @@ abstract class BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
-                break;
                 if ($method === 'update' && isset($input['data'])) {
                     $data = $input['data'] ?? null;
                     $id = intval($data['id']);
@@ -64,10 +62,6 @@ abstract class BaseController {
                         echo json_encode(['error' => 'Error al actualizar']);
                     }
                 }
-            default:
-                http_response_code(404);
-                echo json_encode(['error' => 'Método no válido']);
-                break;
         }
     }
 }
