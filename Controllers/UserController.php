@@ -39,8 +39,7 @@ class UserController extends BaseController {
             return;
         }
 
-        switch ($_SERVER['REQUEST_METHOD']) {
-            case 'POST':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $data = $input['data'] ?? null; 
                 if ($method === 'create') {
                     if ($data && $this->model->create($data)) {
@@ -77,10 +76,6 @@ class UserController extends BaseController {
                         echo json_encode(['error' => 'Error al actualizar']);
                     }
                 }
-            default:
-                http_response_code(404);
-                echo json_encode(['error' => 'Método no válido']);
-                break;
         }
     }
 }
