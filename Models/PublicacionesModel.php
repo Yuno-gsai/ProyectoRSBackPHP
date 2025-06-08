@@ -11,13 +11,9 @@ class PublicacionesModel extends BaseModel {
         parent::__construct();
         $this->table = 'publicaciones';
 
-        $envPath = __DIR__ . '/../.env';
-        if (file_exists($envPath)) {
-            $env = parse_ini_file($envPath);
-            $this->storageAccount = $env['AZURE_STORAGE_ACCOUNT'] ?? '';
-            $this->containerName = $env['AZURE_STORAGE_CONTAINER'] ?? '';
-            $this->sasToken = $env['AZURE_STORAGE_SAS_TOKEN'] ?? '';
-        }
+        $this->storageAccount = getenv('AZURE_STORAGE_ACCOUNT') ?? '';
+        $this->containerName = getenv('AZURE_STORAGE_CONTAINER') ?? '';
+        $this->sasToken = getenv('AZURE_STORAGE_SAS_TOKEN') ?? '';
     }
 
     public function create(array $data): bool {
