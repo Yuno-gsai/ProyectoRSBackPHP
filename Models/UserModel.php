@@ -26,7 +26,6 @@ class UserModel extends BaseModel {
         $stmt = $this->getConnection()->prepare($query);
         return $stmt->execute($data);
     }
-    
 
     public function update(int $id, array $data) {
         $data['id'] = $id;
@@ -63,7 +62,7 @@ class UserModel extends BaseModel {
             return false;
         }
     }
-    
+
     private function guardarImagenBase64(string $base64): string {
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
         $ext = $type[1]; 
@@ -76,6 +75,9 @@ class UserModel extends BaseModel {
     
         $blobName = 'usuarios/' . uniqid() . '.' . $ext;
     
+        // Depura la URL y el SAS Token
+        error_log("Intentando subir la imagen con el siguiente SAS Token: " . $this->sasToken);
+    
         $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
     
         unlink($tempFile);
@@ -85,7 +87,8 @@ class UserModel extends BaseModel {
     
     private function uploadToAzureBlob($storageAccount, $containerName, $blobName, $filePath, $sasToken) {
         $url = "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}?{$sasToken}";
-    
+        error_log("URL generada: " . $url);  // Depura la URL generada para ver si está correcta
+
         $fileSize = filesize($filePath);
         $fileHandle = fopen($filePath, 'r');
     
@@ -105,6 +108,11 @@ class UserModel extends BaseModel {
     
         $response = curl_exec($ch);
         $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+        // Depura la respuesta y el código de estado
+        error_log("Respuesta de Azure: " . $response);  // Depura la respuesta de Azure
+        error_log("Código de estado de Azure: " . $statusCode);  // Depura el código de estado HTTP
+    
         curl_close($ch);
         fclose($fileHandle);
     
@@ -114,16 +122,14 @@ class UserModel extends BaseModel {
             throw new Exception("Error subiendo archivo a Azure Blob: HTTP $statusCode");
         }
     }
-    
 
-    
     public function getByEmail(string $email) {
         $query = "SELECT * FROM {$this->table} WHERE correo = :correo LIMIT 1";
         $stmt = $this->getConnection()->prepare($query);
         $stmt->execute(['correo' => $email]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
+
     public function login($data) {
     
         if (json_last_error() !== JSON_ERROR_NONE) {
