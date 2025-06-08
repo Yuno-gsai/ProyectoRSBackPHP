@@ -59,9 +59,6 @@ class PublicacionesController extends BaseController {
                     $data = $this->model->getPublicacionesDeAmigos($usuarioId);
                     echo json_encode($data);
                 }
-                break;
-
-            case 'PUT':
                 if ($method === 'update' && isset($input['id'])) {
                     $id = intval($input['id']);
                     $data = $input['data'] ?? null;
@@ -72,9 +69,7 @@ class PublicacionesController extends BaseController {
                         echo json_encode(['error' => 'Error al actualizar']);
                     }
                 }
-                break;
 
-            case 'DELETE':
                 if ($method === 'delete' && isset($input['id'])) {
                     $id = intval($input['id']);
                     if ($this->model->delete($id)) {
@@ -84,8 +79,6 @@ class PublicacionesController extends BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
-                break;
-
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);

@@ -57,22 +57,6 @@ class UserController extends BaseController {
                     $data = $this->model->getAll();
                     echo json_encode($data);
                 }
-                break;
-
-            case 'PUT':
-                if ($method === 'update' && isset($input['id'])) {
-                    $data = $input['data'] ?? null;
-                    $id = intval($input['id']);
-                    if ($this->model->update($id, $data)) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        http_response_code(400);
-                        echo json_encode(['error' => 'Error al actualizar']);
-                    }
-                }
-                break;
-
-            case 'DELETE':
                 if ($method === 'delete' && isset($input['id'])) {
                     $data = $input['data'] ?? null;
                     $id = intval($input['id']);
@@ -83,7 +67,16 @@ class UserController extends BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
-                break;
+                if ($method === 'update' && isset($input['id'])) {
+                    $data = $input['data'] ?? null;
+                    $id = intval($input['id']);
+                    if ($this->model->update($id, $data)) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Error al actualizar']);
+                    }
+                }
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);

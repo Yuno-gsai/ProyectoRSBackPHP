@@ -54,7 +54,6 @@ abstract class BaseController {
                     }
                 }
                 break;
-            case 'PUT':
                 if ($method === 'update' && isset($input['data'])) {
                     $data = $input['data'] ?? null;
                     $id = intval($data['id']);
@@ -65,8 +64,6 @@ abstract class BaseController {
                         echo json_encode(['error' => 'Error al actualizar']);
                     }
                 }
-                break;
-
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'Método no válido']);
