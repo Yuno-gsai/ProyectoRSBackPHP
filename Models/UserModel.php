@@ -36,6 +36,7 @@ class UserModel extends BaseModel {
         }
     
         if (isset($data['foto_perfil']) && str_starts_with($data['foto_perfil'], 'data:image/')) {
+            // Guardar la imagen de perfil si se pasa en base64
             $data['foto_perfil'] = $this->guardarImagenBase64($data['foto_perfil']);
         }
     
@@ -63,57 +64,57 @@ class UserModel extends BaseModel {
         }
     }
     
-
     private function guardarImagenBase64(string $base64): string {
         preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
         $ext = $type[1]; 
         $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $base64 = str_replace(' ', '+', $base64);
         $data = base64_decode($base64);
-
+    
         $tempFile = sys_get_temp_dir() . '/' . uniqid('img_') . '.' . $ext;
         file_put_contents($tempFile, $data);
-
+    
         $blobName = 'usuarios/' . uniqid() . '.' . $ext;
-
+    
         $url = $this->uploadToAzureBlob($this->storageAccount, $this->containerName, $blobName, $tempFile, $this->sasToken);
-
+    
         unlink($tempFile);
-
+    
         return $url;
     }
-
+    
     private function uploadToAzureBlob($storageAccount, $containerName, $blobName, $filePath, $sasToken) {
         $url = "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}?{$sasToken}";
-
+    
         $fileSize = filesize($filePath);
         $fileHandle = fopen($filePath, 'r');
-
+    
         $headers = [
             'x-ms-blob-type: BlockBlob',
             'Content-Length: ' . $fileSize,
             'x-ms-version: 2020-10-02',
             'x-ms-date: ' . gmdate('D, d M Y H:i:s T')
         ];
-
+    
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_PUT, true);
         curl_setopt($ch, CURLOPT_INFILE, $fileHandle);
         curl_setopt($ch, CURLOPT_INFILESIZE, $fileSize);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
+    
         $response = curl_exec($ch);
         $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         fclose($fileHandle);
-
+    
         if ($statusCode == 201) {
             return "https://{$storageAccount}.blob.core.windows.net/{$containerName}/{$blobName}";
         } else {
             throw new Exception("Error subiendo archivo a Azure Blob: HTTP $statusCode");
         }
     }
+    
 
     
     public function getByEmail(string $email) {
