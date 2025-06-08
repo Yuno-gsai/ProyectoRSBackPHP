@@ -56,19 +56,17 @@ class UserController extends BaseController {
                 $data = $this->model->getAll();
                 echo json_encode($data);
             }
-            if ($method === 'delete' && isset($input['id'])) {
-                $data = $input['data'] ?? null;
-                $id = intval($input['id']);
-                if ($this->model->delete($data)) {
+            if ($method === 'delete' && isset($data['id'])) {
+                $id = intval($data['id']);
+                if ($this->model->delete($id)) {
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(400);
                     echo json_encode(['error' => 'Error al eliminar']);
                 }
             }
-            if ($method === 'update' && isset($input['id'])) {
-                $data = $input['data'] ?? null;
-                $id = intval($input['id']);
+            if ($method === 'update' && isset($data['id'])) {
+                $id = intval($data['id']);
                 if ($this->model->update($id, $data)) {
                     echo json_encode(['success' => true]);
                 } else {

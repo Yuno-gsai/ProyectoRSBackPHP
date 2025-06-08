@@ -29,8 +29,8 @@ abstract class BaseController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = $input['data'] ?? null; 
                 if ($method === 'create') {
-                    $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
                     } else {
@@ -42,8 +42,7 @@ abstract class BaseController {
                     $data = $this->model->getAll();
                     echo json_encode($data);
                 }
-                if ($method === 'delete' && isset($input['data'])) {
-                    $data = $input['data'] ?? null;
+                if ($method === 'delete' && isset($data['id'])) {
                     $id = intval($data['id']);
                     if ($this->model->delete($id)) {
                         echo json_encode(['success' => true]);
@@ -52,8 +51,7 @@ abstract class BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
-                if ($method === 'update' && isset($input['data'])) {
-                    $data = $input['data'] ?? null;
+                if ($method === 'update' && isset($data['id'])) {
                     $id = intval($data['id']);
                     if ($this->model->update($id, $data)) {
                         echo json_encode(['success' => true]);

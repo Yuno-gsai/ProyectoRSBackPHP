@@ -38,8 +38,8 @@ class PublicacionesController extends BaseController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = $input['data'] ?? null; 
             if ($method === 'create') {
-                    $data = $input['data'] ?? null; 
                     if ($data && $this->model->create($data)) {
                         echo json_encode(['success' => true]);
                     } else {
@@ -52,15 +52,13 @@ class PublicacionesController extends BaseController {
                     echo json_encode($data);
                 }
 
-                if ($method === 'amigos' && isset($input['data'])) {
-                    $data = $input['data'] ?? null;
+                if ($method === 'amigos' && isset($data['usuario_id'])) {
                     $usuarioId = $data['usuario_id']; 
                     $data = $this->model->getPublicacionesDeAmigos($usuarioId);
                     echo json_encode($data);
                 }
-                if ($method === 'update' && isset($input['id'])) {
-                    $id = intval($input['id']);
-                    $data = $input['data'] ?? null;
+                if ($method === 'update' && isset($data['id'])) {
+                    $id = intval($data['id']);
                     if ($this->model->update($id, $data)) {
                         echo json_encode(['success' => true]);
                     } else {
@@ -69,8 +67,8 @@ class PublicacionesController extends BaseController {
                     }
                 }
 
-                if ($method === 'delete' && isset($input['id'])) {
-                    $id = intval($input['id']);
+                if ($method === 'delete' && isset($data['id'])) {
+                    $id = intval($data['id']);
                     if ($this->model->delete($id)) {
                         echo json_encode(['success' => true]);
                     } else {
