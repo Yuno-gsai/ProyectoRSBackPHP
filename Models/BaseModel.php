@@ -16,7 +16,7 @@ abstract class BaseModel extends DatabaseConnection{
     
     public function get($id) {
         $query = "SELECT * FROM {$this->table} WHERE id = $id";
-        return $this->ExecuteQuery($query);
+        return $this->ExecuteQuery($query)->fetch(PDO::FETCH_ASSOC);
     }
     
     public function delete($id) {
