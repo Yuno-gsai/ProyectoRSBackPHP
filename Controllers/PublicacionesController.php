@@ -76,6 +76,11 @@ class PublicacionesController extends BaseController {
                         echo json_encode(['error' => 'Error al eliminar']);
                     }
                 }
+                if ($method === 'GetPublicationsByUserID' && isset($data['usuario_id'])) {
+                    $usuarioId = $data['usuario_id']; 
+                    $data = $this->model->getUserPublications($usuarioId);
+                    echo json_encode($data);
+                }
         }
     }
 }

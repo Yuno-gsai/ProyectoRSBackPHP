@@ -74,6 +74,15 @@ class UserController extends BaseController {
                     echo json_encode(['error' => 'Error al actualizar']);
                 }
             }
+            if ($method === 'getUserByID' && isset($data['id'])){
+                $id = intval($data['id']);
+                if ($this->model->get($id)){
+                    echo json_encode(['success' => true]);
+                }else{
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Error al obtener informacion']);
+                }
+            }
         }
     }
 }

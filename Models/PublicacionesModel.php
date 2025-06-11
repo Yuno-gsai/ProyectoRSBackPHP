@@ -192,5 +192,12 @@ class PublicacionesModel extends BaseModel {
         return $publicaciones;
     }
 
+    public function getUserPublications($userID) {
+        $pdo = $this->getConnection();
+        $stmt = $pdo->prepare("SELECT * FROM publicaciones WHERE usuario_id = :userID");
+        $stmt->execute(['userID' => $userID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
 ?>
